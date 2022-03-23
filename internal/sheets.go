@@ -43,3 +43,18 @@ func DeleteZeroSheet(srv *sheets.Service, spreadsheetId string, spreadsheet spre
 	}
 	return nil
 }
+func DeleteAllSheet(srv *sheets.Service, spreadsheetId string, id int64) error {
+	req := sheets.Request{
+		DeleteSheet: &sheets.DeleteSheetRequest{
+			SheetId: id,
+		},
+	}
+	rbb := &sheets.BatchUpdateSpreadsheetRequest{
+		Requests: []*sheets.Request{&req},
+	}
+	_, err := srv.Spreadsheets.BatchUpdate(spreadsheetId, rbb).Context(context.Background()).Do()
+	if err != nil {
+		return err
+	}
+	return nil
+}

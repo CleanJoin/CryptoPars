@@ -10,13 +10,19 @@ import (
 	"gopkg.in/Iwark/spreadsheet.v2"
 )
 
-func CryptoParser(spreadSheetService *spreadsheet.Service, idSheets string, param string) error {
+type CrypData struct {
+	Name string
+	Tag  string
+	Time string
+}
 
-	resp, err := http.Get("https://cryptorank.io/" + param)
+func CryptoParser(spreadSheetService *spreadsheet.Service, idSheets string) error {
+
+	resp, err := http.Get("https://cryptorank.io/")
 	if err != nil {
 		log.Println(err)
 		time.Sleep(time.Minute + 1)
-		CryptoParser(spreadSheetService, idSheets, param)
+		CryptoParser(spreadSheetService, idSheets)
 	}
 
 	parseHtml(resp, spreadSheetService, idSheets)
@@ -26,7 +32,7 @@ func CryptoParser(spreadSheetService *spreadsheet.Service, idSheets string, para
 
 func parseHtml(resp *http.Response, spreadSheetService *spreadsheet.Service, idSheets string) {
 
-	new := new(GecData)
+	new := new(CrypData)
 	document, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		log.Fatal("Error loading HTTP response body. ", err)
@@ -41,14 +47,15 @@ func parseHtml(resp *http.Response, spreadSheetService *spreadsheet.Service, idS
 		}
 		if index == 0 {
 			re := regexp.MustCompile(`[[:space:]]`)
-			new.Coin = re.ReplaceAllString(app.FirstChild.Data, "")
+			new.Name = re.ReplaceAllString(app.FirstChild.Data, "")
 			index++
 		} else if index == 1 {
 			re := regexp.MustCompile(`[[:space:]]`)
-			new.Money = re.ReplaceAllString(app.FirstChild.Data, "")
+			new.Tag = re.ReplaceAllString(app.FirstChild.Data, "")
 			new.Time = time.Now().Format(time.RFC850)
-			indexTable := WriteTable(new, spreadSheetService, idSheets)
-			if indexTable == 65 {
+			indexTable := WriteTableCry(new, spreadSheetService, idSheets)
+
+			if indexTable == 3 {
 				break
 			}
 			index++
